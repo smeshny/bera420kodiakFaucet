@@ -1,3 +1,11 @@
+data/bera_wallets.xlsx
+data/config.py
+data/proxies_replacement.txt
+persistent_data
+data/.DS_Store
+.DS_Store
+downloaded_files/
+logs/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
