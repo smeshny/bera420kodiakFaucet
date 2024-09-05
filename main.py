@@ -109,10 +109,11 @@ def check_proxy(input_proxy):
     working_proxy = checker.check_and_replace_proxy(input_proxy, url)
 
     if working_proxy:
-        logger.debug(f"Original proxy is good. Timeout < {PROXY_TIMEOUT_FOR_CHECKER}s")
         if working_proxy != input_proxy:
             logger.debug(f"Original proxy was replaced with a working one from the replacement file.")
             logger.debug(f"New proxy is: {working_proxy}")
+        else:
+            logger.debug(f"Original proxy is good. Timeout < {PROXY_TIMEOUT_FOR_CHECKER}s")
         return working_proxy
     else:
         logger.debug(f"No working proxy found for replacement.")
@@ -123,11 +124,16 @@ def main() -> None:
     account_manager = AccountManager(ACCOUNTS_FILE)
     accounts = account_manager.get_accounts(ACCOUTNS_TO_WORK, shuffle=ACCOUTNS_SHUFFLE)
     accounts_in_work = [account['account_name'] for account in accounts]
+    total_accounts = len(accounts_in_work)
+    
     logger.debug(f"Start working with {len(accounts_in_work)} accounts in order: {accounts_in_work}")
 
-    for account in accounts:
+
+    for index, account in enumerate(accounts):
         account_name, evm_wallet, proxy = account.values()
+        remaining_accounts = total_accounts - index - 1
         logger.debug(f"🤖 Start working with account: {account_name} | {evm_wallet} | Proxy: {proxy}.")
+        logger.info(f"Remaining accounts: {remaining_accounts}")
 
         try:
             working_proxy = check_proxy(proxy)
@@ -140,10 +146,17 @@ def main() -> None:
             time.sleep(5)
             shutil.rmtree(f"./persistent_data/{account_name}")
             logger.debug(f"Persistent data cleaned for account: {account_name}")
+            
+        if index < total_accounts - 1:
+            next_account = accounts[index + 1]['account_name']
+            logger.info(f"Next account: {next_account}")
+        else:
+            logger.info("This is the last account")
         
-        sleep_btw_accs = random.uniform(*SLEEP_BETWEEN_ACCOUTNS)
-        logger.debug(f"Start sleeping for {sleep_btw_accs} sec")
-        time.sleep(sleep_btw_accs)
+        if remaining_accounts > 0:
+            sleep_btw_accs = random.uniform(*SLEEP_BETWEEN_ACCOUTNS)
+            logger.debug(f"Start sleeping for {sleep_btw_accs} sec")
+            time.sleep(sleep_btw_accs)
             
 
 if __name__ == "__main__":
