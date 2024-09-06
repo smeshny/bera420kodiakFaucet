@@ -176,6 +176,10 @@ def process_account(account, index):
 
 @logger.catch
 def main() -> None:
+    SUCCESS_WALLETS.clear()
+    ALREADY_CLAIMED_WALLETS.clear()
+    MORE_THAN_1_BERA_WALLETS.clear()
+    
     global total_accounts
     account_manager = AccountManager(ACCOUNTS_FILE)
     accounts = account_manager.get_accounts(ACCOUTNS_TO_WORK, shuffle=ACCOUTNS_SHUFFLE)
