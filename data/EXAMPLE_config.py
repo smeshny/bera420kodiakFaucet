@@ -13,7 +13,7 @@ ACCOUNTS_FILE = "data/bera_wallets.xlsx"
 ACCOUTNS_TO_WORK = []
 ACCOUTNS_SHUFFLE = True
 SLEEP_BETWEEN_ACCOUTNS = (3, 7)
-TREAD_POOL_WORKERS = 10 # ☠️☠️☠️ !!! USE THIS VERY CAREFUL!!! . Only with IS_HEADLESS = True.
+TREAD_POOL_WORKERS = 3 # ☠️☠️☠️ !!! USE THIS VERY CAREFUL!!! . Only with IS_HEADLESS = True.
 
 NEXT_RUN_WAITING = 3 * 60 * 60 # In seconds, Faucet working every 3 HOURS. Script use UTC time.
 
