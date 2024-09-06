@@ -10,7 +10,7 @@ An automated tool for claiming BERA tokens from faucet.kodiak.finance.
 
 ## 🚀 Features
 
-- Using selenimbase UC driver
+- Using seleniumbase UC driver
 - Automatic CAPTCHA solving
 - Multi-threaded account processing
 - BERA balance check before claiming attempt
