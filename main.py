@@ -19,6 +19,11 @@ from data.config import SLEEP_BETWEEN_ACCOUTNS, ACCOUNTS_FILE, ACCOUTNS_TO_WORK,
                         CLEAN_PERSISTENT_DATA, PROXY_TIMEOUT_FOR_CHECKER, TREAD_POOL_WORKERS
 
 
+SUCCESS_WALLETS = []
+ALREADY_CLAIMED_WALLETS = []
+MORE_THAN_1_BERA_WALLETS = []
+
+
 @logger.catch
 def claim_bera_kodiak(sb: SB, evm_wallet) -> None:
     # install capmonster chrome ext
@@ -37,6 +42,8 @@ def claim_bera_kodiak(sb: SB, evm_wallet) -> None:
         sb.wait_for_element('div:contains("Congratulations")')
         sb.highlight('div:contains("Congratulations")')
         logger.info(f"👀 Already claimed BERA for wallet: {evm_wallet}")
+        if evm_wallet not in ALREADY_CLAIMED_WALLETS:
+            ALREADY_CLAIMED_WALLETS.append(evm_wallet)
         return
     except Exception as e:
         if "was not present" in str(e):
@@ -49,8 +56,7 @@ def claim_bera_kodiak(sb: SB, evm_wallet) -> None:
         logger.debug(f"Waiting for CAPTCHA solving by extension! Max timeout is {CAPTCHA_TIMEOUT}")
         sb.wait_for_element_clickable('//*[@id="root"]/div/div/div[2]/button', timeout=CAPTCHA_TIMEOUT)
     except Exception as e:
-        logger.error(f"🙀 Can't solve captcha in {CAPTCHA_TIMEOUT} sec.")
-        logger.error(e)
+        logger.debug(f"🙀 Can't solve captcha in {CAPTCHA_TIMEOUT} sec.")
         return
     
     sb.sleep(random.uniform(1,3))
@@ -85,6 +91,8 @@ def claim_bera_kodiak(sb: SB, evm_wallet) -> None:
             sb.wait_for_element('div:contains("Congratulations")')
             sb.highlight('div:contains("Congratulations")')
             logger.success(f"🫡 🦾 1 BERA claimed for wallet: https://bartio.beratrail.io/address/{evm_wallet}")
+            if evm_wallet not in SUCCESS_WALLETS:
+                SUCCESS_WALLETS.append(evm_wallet)
             return
         except Exception as e:
             if "was not present" in str(e):
@@ -127,36 +135,41 @@ def check_proxy(input_proxy):
         logger.debug(f"No working proxy found for replacement.")
 
 
-#threading
-# Global
-processed_accounts = 0
-total_accounts = 0
-progress_lock = threading.Lock()
-
-@logger.catch
-def process_account(account, index):
-    global processed_accounts
-    account_name, evm_wallet, proxy = account.values()
-    try:
-        working_proxy = check_proxy(proxy)
-        if check_BERA_balance(evm_wallet, working_proxy) > 1:
-            logger.error(f"BERA balance > 1 account: {account_name}. Will skip this account")
-        else:
-            open_SB_for_account(account_name, working_proxy, evm_wallet)
-    except Exception as e:
-        logger.error(f"Error processing account {account_name}: {e}")
-    
+def clean_persistent_data(account_name: str) -> None:
     if CLEAN_PERSISTENT_DATA:
         if os.path.exists(f"./persistent_data/{account_name}"):
             if os.path.isdir(f"./persistent_data/{account_name}"):
                 time.sleep(5)
                 shutil.rmtree(f"./persistent_data/{account_name}")
                 logger.debug(f"Persistent data cleaned for account: {account_name}")
+
+
+#threading
+# Global
+total_accounts = 0
+progress_lock = threading.Lock()
+
+@logger.catch
+def process_account(account, index):
+    account_name, evm_wallet, proxy = account.values()
+    
+    time.sleep(random.uniform(*SLEEP_BETWEEN_ACCOUTNS))
+    
+    try:
+        working_proxy = check_proxy(proxy)
+        if check_BERA_balance(evm_wallet, working_proxy) > 1:
+            logger.debug(f"BERA balance > 1 account: {account_name}. Will skip this account")
+            if evm_wallet not in MORE_THAN_1_BERA_WALLETS:
+                MORE_THAN_1_BERA_WALLETS.append(evm_wallet)
+        else:
+            open_SB_for_account(account_name, working_proxy, evm_wallet)
+    except Exception as e:
+        logger.error(f"Error processing account {account_name}: {e}")
     
     with progress_lock:
-        processed_accounts += 1
-        remaining = total_accounts - processed_accounts
-        logger.debug(f"[{processed_accounts}/{total_accounts}] Completed account: {account_name}. Remaining: {remaining}")
+        clean_persistent_data(account_name)
+
+        logger.debug(f"Completed account: {account_name}.")
 
 
 @logger.catch
@@ -169,14 +182,51 @@ def main() -> None:
     
     logger.debug(f"Start working with {total_accounts} accounts in order: {accounts_in_work}")
 
-    with ThreadPoolExecutor(max_workers=TREAD_POOL_WORKERS) as executor:  # Adjust max_workers as needed
+    with ThreadPoolExecutor(max_workers=TREAD_POOL_WORKERS) as executor:
         futures = [executor.submit(process_account, account, i) for i, account in enumerate(accounts)]
         
         
         for _ in tqdm(as_completed(futures), total=total_accounts, desc="Processing accounts"):
             pass
-
-    logger.success(f"{total_accounts} accounts completed work! 💨 🚬")
+    
+    logger.success(f"First iteration COMPLETE. Start to work with unseccessfull accounts 💨 🚬")
+    
+    # REWORK for accounts with errors:
+    rework_accounts = [
+        account for account in accounts 
+        if account['evm_wallet'] not in SUCCESS_WALLETS and 
+           account['evm_wallet'] not in ALREADY_CLAIMED_WALLETS and 
+           account['evm_wallet'] not in MORE_THAN_1_BERA_WALLETS
+    ]
+    
+    total_rework_accounts = len(rework_accounts)
+    logger.success(f"Accounts to REWORK: {total_rework_accounts} 💨 🚬")
+    
+    with ThreadPoolExecutor(max_workers=TREAD_POOL_WORKERS) as executor:
+        futures = [executor.submit(process_account, account, i) for i, account in enumerate(rework_accounts)]
+        
+        
+        for _ in tqdm(as_completed(futures), total=total_rework_accounts, desc="Processing accounts"):
+            pass
+    
+    
+    unkonwn_error_wallets_count = len(accounts) - \
+                            len(SUCCESS_WALLETS) - \
+                            len(ALREADY_CLAIMED_WALLETS) - \
+                            len(MORE_THAN_1_BERA_WALLETS)
+    
+    logger.success(
+        f"""
+        🫡 JOB DONE! 🫡
+        
+        Summary:
+        • Successful accounts💨 🚬: {len(SUCCESS_WALLETS)} accounts with claimed BERA 💨 🚬
+        • Already claimed 👀 in 3H period accounts: {len(ALREADY_CLAIMED_WALLETS)}
+        • Accounts > 1 BERA (can't claim on faucet): {len(MORE_THAN_1_BERA_WALLETS)}
+        • Accounts with uncknown errors: {unkonwn_error_wallets_count}
+        • Total accounts completed: {len(accounts)} 💨 🚬
+        """
+    )
 
 
 if __name__ == "__main__":

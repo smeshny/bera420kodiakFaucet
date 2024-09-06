@@ -35,7 +35,7 @@ class AccountManager:
 
 
     def get_accounts(self, range_list: Union[List[Union[int, str]], int] = None, shuffle: bool = False) -> List[Dict]:
-        if range_list is None:
+        if range_list is None or len(range_list) == 0:
             accounts = self.accounts
         elif isinstance(range_list, int):
             accounts = [self.accounts[range_list - 1]] if 0 < range_list <= len(self.accounts) else []
