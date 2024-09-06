@@ -1,8 +1,9 @@
 # BERA420 Kodiak Faucet Claimer
 
 An automated tool for claiming BERA tokens from faucet.kodiak.finance.
-💀 Tested only on macOs.
-💀 Be careful with the number of threads
+
+- 💀 Tested only on macOs.
+- 💀 Be careful with the number of threads
 
 ## 🚀 Features
 
@@ -12,6 +13,17 @@ An automated tool for claiming BERA tokens from faucet.kodiak.finance.
 - BERA balance check before claiming attempt
 - Automatic replacement of non-working proxies
 - Browser data cleanup after each use (optional)
+
+## 🔐 CapMonster Setup
+
+You need CapMonster for CAPTCHA solving. To use this service:
+
+1. Visit [https://capmonster.cloud/Dashboard](https://capmonster.cloud/Dashboard)
+2. Create an account or log in if you already have one
+3. Obtain your API key from the dashboard
+4. Ensure you have sufficient balance in your CapMonster account
+
+Remember to add your CapMonster API key to the `config.py` file. The script will not function correctly without a valid API key and sufficient balance in your CapMonster account.
 
 ## 🚀 Quick Start
 
