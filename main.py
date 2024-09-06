@@ -1,5 +1,6 @@
 import random
 import time
+import os
 import shutil
 
 import threading
@@ -10,11 +11,12 @@ from seleniumbase import SB
 
 from utils.custom_logger import logger
 from utils.account_manager import AccountManager
+from utils.web3_helper import check_BERA_balance
 from utils.proxy_handler import ProxyChecker
 from utils.js_simulations import simulaion_mouse_move, simulaion_mouse_move_and_click
 from data.config import SLEEP_BETWEEN_ACCOUTNS, ACCOUNTS_FILE, ACCOUTNS_TO_WORK, ACCOUTNS_SHUFFLE, \
                         IS_HEADLESS, CAPMONSTER_API_KEY, CAPTCHA_TIMEOUT, ATTEMPTS_TO_CLICK, \
-                        CLEAN_PERSISTENT_DATA, PROXY_TIMEOUT_FOR_CHECKER
+                        CLEAN_PERSISTENT_DATA, PROXY_TIMEOUT_FOR_CHECKER, TREAD_POOL_WORKERS
 
 
 @logger.catch
@@ -125,48 +127,6 @@ def check_proxy(input_proxy):
         logger.debug(f"No working proxy found for replacement.")
 
 
-# @logger.catch
-# def main() -> None:
-#     account_manager = AccountManager(ACCOUNTS_FILE)
-#     accounts = account_manager.get_accounts(ACCOUTNS_TO_WORK, shuffle=ACCOUTNS_SHUFFLE)
-#     accounts_in_work = [account['account_name'] for account in accounts]
-#     total_accounts = len(accounts_in_work)
-    
-#     logger.debug(f"Start working with {len(accounts_in_work)} accounts in order: {accounts_in_work}")
-
-
-#     for index, account in enumerate(accounts):
-#         account_name, evm_wallet, proxy = account.values()
-#         remaining_accounts = total_accounts - index
-#         logger.debug(f"[{index + 1}/{remaining_accounts}] 🤖 Start working with account: {account_name} | {evm_wallet} | Proxy: {proxy}.")
-        
-
-#         try:
-#             working_proxy = check_proxy(proxy)
-#             open_SB_for_account(account_name, working_proxy, evm_wallet)
-#         except Exception as e:
-#             logger.error(e)
-#             continue
-        
-#         if CLEAN_PERSISTENT_DATA:
-#             time.sleep(5)
-#             shutil.rmtree(f"./persistent_data/{account_name}")
-#             logger.debug(f"Persistent data cleaned for account: {account_name}")
-        
-#         logger.debug(f"[{index + 1}/{remaining_accounts}] 🤖 Finishing work with account: {account_name}")
-
-#         sleep_btw_accs = random.uniform(*SLEEP_BETWEEN_ACCOUTNS)
-#         logger.debug(f"Sleeping for {sleep_btw_accs} sec")
-#         time.sleep(sleep_btw_accs)
-
-
-#     logger.success(f"{total_accounts} accounts completed work! 💨 🚬")
-            
-
-# if __name__ == "__main__":
-#     main()
-
-
 #threading
 # Global
 processed_accounts = 0
@@ -179,15 +139,19 @@ def process_account(account, index):
     account_name, evm_wallet, proxy = account.values()
     try:
         working_proxy = check_proxy(proxy)
-        open_SB_for_account(account_name, working_proxy, evm_wallet)
+        if check_BERA_balance(evm_wallet, working_proxy) > 1:
+            logger.error(f"BERA balance > 1 account: {account_name}. Will skip this account")
+        else:
+            open_SB_for_account(account_name, working_proxy, evm_wallet)
     except Exception as e:
         logger.error(f"Error processing account {account_name}: {e}")
     
     if CLEAN_PERSISTENT_DATA:
-        time.sleep(5)
-        shutil.rmtree(f"./persistent_data/{account_name}")
-        logger.debug(f"Persistent data cleaned for account: {account_name}")
-    
+        if os.path.exists(f"./persistent_data/{account_name}"):
+            if os.path.isdir(f"./persistent_data/{account_name}"):
+                time.sleep(5)
+                shutil.rmtree(f"./persistent_data/{account_name}")
+                logger.debug(f"Persistent data cleaned for account: {account_name}")
     
     with progress_lock:
         processed_accounts += 1
@@ -205,7 +169,7 @@ def main() -> None:
     
     logger.debug(f"Start working with {total_accounts} accounts in order: {accounts_in_work}")
 
-    with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers as needed
+    with ThreadPoolExecutor(max_workers=TREAD_POOL_WORKERS) as executor:  # Adjust max_workers as needed
         futures = [executor.submit(process_account, account, i) for i, account in enumerate(accounts)]
         
         
