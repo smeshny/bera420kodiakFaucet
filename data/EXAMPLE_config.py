@@ -12,18 +12,20 @@ ACCOUNTS_FILE = "data/bera_wallets.xlsx"
  """
 ACCOUTNS_TO_WORK = []
 ACCOUTNS_SHUFFLE = True
-SLEEP_BETWEEN_ACCOUTNS = (1, 5)
+SLEEP_BETWEEN_ACCOUTNS = (3, 7)
+TREAD_POOL_WORKERS = 10 # ☠️☠️☠️ !!! USE THIS VERY CAREFUL!!! . Only with IS_HEADLESS = True.
 
-IS_HEADLESS = False
+NEXT_RUN_WAITING = 3 * 60 * 60 # In seconds, Faucet working every 3 HOURS. Script use UTC time.
 
-PROXY_TIMEOUT_FOR_CHECKER = 3
-CAPTCHA_TIMEOUT = 180
+IS_HEADLESS = True
+
+PROXY_TIMEOUT_FOR_CHECKER = 2
+CAPTCHA_TIMEOUT = 66
 ATTEMPTS_TO_CLICK = 5
 
 CLEAN_PERSISTENT_DATA = True
 
-CAPMONSTER_API_KEY= "" # https://capmonster.cloud/Dashboard
-
+CAPMONSTER_API_KEY=""
 SEND_NOTIFICATIONS = False
-TG_TOKEN = '' # https://t.me/BotFather
-TG_ID = '132081081' # https://t.me/getmyid_bot
+TG_TOKEN = ''
+TG_ID = ''
