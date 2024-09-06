@@ -1,6 +1,8 @@
 # BERA420 Kodiak Faucet Claimer
 
 An automated tool for claiming BERA tokens from faucet.kodiak.finance.
+💀 Tested only on macOs.
+💀 Be careful with the number of threads
 
 ## 🚀 Features
 
@@ -21,9 +23,7 @@ An automated tool for claiming BERA tokens from faucet.kodiak.finance.
 2. Create and activate a virtual environment:
    ```bash
    python3.11 -m venv my_venv
-   source my_venv/bin/activate  # For Linux/Mac
-   # or
-   my_venv\Scripts\activate  # For Windows
+   source my_venv/bin/activate
    ```
 
 3. Navigate to the project directory:
