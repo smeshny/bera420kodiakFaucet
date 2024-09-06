@@ -2,6 +2,10 @@ import random
 import time
 import shutil
 
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
+
 from seleniumbase import SB
 
 from utils.custom_logger import logger
@@ -100,6 +104,8 @@ def open_SB_for_account(account_name, proxy, evm_wallet) -> None:
     
             claim_bera_kodiak(sb, evm_wallet)
 
+
+@logger.catch
 def check_proxy(input_proxy):
     replacement_file = "./data/proxies_replacement.txt"
     url = "https://www.faucet.kodiak.finance/"
@@ -119,45 +125,95 @@ def check_proxy(input_proxy):
         logger.debug(f"No working proxy found for replacement.")
 
 
+# @logger.catch
+# def main() -> None:
+#     account_manager = AccountManager(ACCOUNTS_FILE)
+#     accounts = account_manager.get_accounts(ACCOUTNS_TO_WORK, shuffle=ACCOUTNS_SHUFFLE)
+#     accounts_in_work = [account['account_name'] for account in accounts]
+#     total_accounts = len(accounts_in_work)
+    
+#     logger.debug(f"Start working with {len(accounts_in_work)} accounts in order: {accounts_in_work}")
+
+
+#     for index, account in enumerate(accounts):
+#         account_name, evm_wallet, proxy = account.values()
+#         remaining_accounts = total_accounts - index
+#         logger.debug(f"[{index + 1}/{remaining_accounts}] 🤖 Start working with account: {account_name} | {evm_wallet} | Proxy: {proxy}.")
+        
+
+#         try:
+#             working_proxy = check_proxy(proxy)
+#             open_SB_for_account(account_name, working_proxy, evm_wallet)
+#         except Exception as e:
+#             logger.error(e)
+#             continue
+        
+#         if CLEAN_PERSISTENT_DATA:
+#             time.sleep(5)
+#             shutil.rmtree(f"./persistent_data/{account_name}")
+#             logger.debug(f"Persistent data cleaned for account: {account_name}")
+        
+#         logger.debug(f"[{index + 1}/{remaining_accounts}] 🤖 Finishing work with account: {account_name}")
+
+#         sleep_btw_accs = random.uniform(*SLEEP_BETWEEN_ACCOUTNS)
+#         logger.debug(f"Sleeping for {sleep_btw_accs} sec")
+#         time.sleep(sleep_btw_accs)
+
+
+#     logger.success(f"{total_accounts} accounts completed work! 💨 🚬")
+            
+
+# if __name__ == "__main__":
+#     main()
+
+
+#threading
+# Global
+processed_accounts = 0
+total_accounts = 0
+progress_lock = threading.Lock()
+
+@logger.catch
+def process_account(account, index):
+    global processed_accounts
+    account_name, evm_wallet, proxy = account.values()
+    try:
+        working_proxy = check_proxy(proxy)
+        open_SB_for_account(account_name, working_proxy, evm_wallet)
+    except Exception as e:
+        logger.error(f"Error processing account {account_name}: {e}")
+    
+    if CLEAN_PERSISTENT_DATA:
+        time.sleep(5)
+        shutil.rmtree(f"./persistent_data/{account_name}")
+        logger.debug(f"Persistent data cleaned for account: {account_name}")
+    
+    
+    with progress_lock:
+        processed_accounts += 1
+        remaining = total_accounts - processed_accounts
+        logger.debug(f"[{processed_accounts}/{total_accounts}] Completed account: {account_name}. Remaining: {remaining}")
+
+
 @logger.catch
 def main() -> None:
+    global total_accounts
     account_manager = AccountManager(ACCOUNTS_FILE)
     accounts = account_manager.get_accounts(ACCOUTNS_TO_WORK, shuffle=ACCOUTNS_SHUFFLE)
     accounts_in_work = [account['account_name'] for account in accounts]
     total_accounts = len(accounts_in_work)
     
-    logger.debug(f"Start working with {len(accounts_in_work)} accounts in order: {accounts_in_work}")
+    logger.debug(f"Start working with {total_accounts} accounts in order: {accounts_in_work}")
 
-
-    for index, account in enumerate(accounts):
-        account_name, evm_wallet, proxy = account.values()
-        remaining_accounts = total_accounts - index - 1
-        logger.debug(f"🤖 Start working with account: {account_name} | {evm_wallet} | Proxy: {proxy}.")
-        logger.info(f"Remaining accounts: {remaining_accounts}")
-
-        try:
-            working_proxy = check_proxy(proxy)
-            open_SB_for_account(account_name, working_proxy, evm_wallet)
-        except Exception as e:
-            logger.error(e)
-            continue
+    with ThreadPoolExecutor(max_workers=10) as executor:  # Adjust max_workers as needed
+        futures = [executor.submit(process_account, account, i) for i, account in enumerate(accounts)]
         
-        if CLEAN_PERSISTENT_DATA:
-            time.sleep(5)
-            shutil.rmtree(f"./persistent_data/{account_name}")
-            logger.debug(f"Persistent data cleaned for account: {account_name}")
-            
-        if index < total_accounts - 1:
-            next_account = accounts[index + 1]['account_name']
-            logger.info(f"Next account: {next_account}")
-        else:
-            logger.info("This is the last account")
         
-        if remaining_accounts > 0:
-            sleep_btw_accs = random.uniform(*SLEEP_BETWEEN_ACCOUTNS)
-            logger.debug(f"Start sleeping for {sleep_btw_accs} sec")
-            time.sleep(sleep_btw_accs)
-            
+        for _ in tqdm(as_completed(futures), total=total_accounts, desc="Processing accounts"):
+            pass
+
+    logger.success(f"{total_accounts} accounts completed work! 💨 🚬")
+
 
 if __name__ == "__main__":
     main()
