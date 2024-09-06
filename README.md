@@ -1,7 +1,15 @@
-```markdown
 # BERA420 Kodiak Faucet Claimer
 
 An automated tool for claiming BERA tokens from faucet.kodiak.finance.
+
+## 🚀 Features
+
+- Using selenimbase UC driver
+- Automatic CAPTCHA solving
+- Multi-threaded account processing
+- BERA balance check before claiming attempt
+- Automatic replacement of non-working proxies
+- Browser data cleanup after each use (optional)
 
 ## 🚀 Quick Start
 
@@ -34,16 +42,18 @@ In the `./data/` folder, set up the following files:
 
 1. **bera_wallets.xlsx**
    - Rename `EXAMPLE_bera_wallets.xlsx` to `bera_wallets.xlsx`
-   - Fill the file with your data following the example
+   - Fill the file with your data following the example. Fill adresses, not PK.
 
 2. **config.py**
    - Rename `EXAMPLE_config.py` to `config.py`
    - Fill in the configuration settings (API keys, timeouts, etc.)
    - Set `IS_HEADLESS=False` to watch the process in the browser
+   - UTC time used everywhere!
 
 3. **proxies_replacement.txt**
    - Rename `EXAMPLE_proxies_replacement.txt` to `proxies_replacement.txt`
    - Add additional residential proxies (4200 recommended)
+   - Every time when proxy changing it will delete this proxy from the end of this file
 
 ## 🏃‍♂️ Running the Script
 
@@ -53,23 +63,6 @@ After setting up all files, run the script:
 python main.py
 ```
 
-## 🔑 Features
-
-- Automatic CAPTCHA solving
-- Multi-threaded account processing
-- BERA balance check before claiming attempt
-- Automatic replacement of non-working proxies
-- Browser data cleanup after each use (optional)
-
 ## ⚠️ Disclaimer
 
 Use this tool at your own risk. The author is not responsible for any consequences of its use.
-
-## 🤝 Contributing
-
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
-
-## 📜 License
-
-[MIT](https://choosealicense.com/licenses/mit/)
-```
