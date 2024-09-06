@@ -1,7 +1,7 @@
 # BERA420 Kodiak Faucet Claimer
-- Channel: [Mimble Wimble LAB](https://t.me/MimbleWimbleLAB)
-- Chat: [Mimble Wimble DAO CHAT](https://t.me/MWDAO_Chat)
-- Main Channel: [Mimble Wimble DAO](https://t.me/MimbleWimbleDAO)
+- [Mimble Wimble LAB](https://t.me/MimbleWimbleLAB)
+- [Mimble Wimble DAO CHAT](https://t.me/MWDAO_Chat)
+- [Mimble Wimble DAO](https://t.me/MimbleWimbleDAO)
 
 An automated tool for claiming BERA tokens from faucet.kodiak.finance.
 
