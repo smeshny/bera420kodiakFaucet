@@ -11,12 +11,14 @@ from seleniumbase import SB
 
 from utils.custom_logger import logger
 from utils.account_manager import AccountManager
+from utils.timestamp_helper import save_timestamp, read_timestamp, seconds_from_last_run
 from utils.web3_helper import check_BERA_balance
 from utils.proxy_handler import ProxyChecker
 from utils.js_simulations import simulaion_mouse_move, simulaion_mouse_move_and_click
 from data.config import SLEEP_BETWEEN_ACCOUTNS, ACCOUNTS_FILE, ACCOUTNS_TO_WORK, ACCOUTNS_SHUFFLE, \
                         IS_HEADLESS, CAPMONSTER_API_KEY, CAPTCHA_TIMEOUT, ATTEMPTS_TO_CLICK, \
-                        CLEAN_PERSISTENT_DATA, PROXY_TIMEOUT_FOR_CHECKER, TREAD_POOL_WORKERS
+                        CLEAN_PERSISTENT_DATA, PROXY_TIMEOUT_FOR_CHECKER, TREAD_POOL_WORKERS, \
+                        NEXT_RUN_WAITING
 
 
 SUCCESS_WALLETS = []
@@ -230,4 +232,13 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    while True:
+        if seconds_from_last_run() > NEXT_RUN_WAITING:
+            logger.success(f"Start new cycle for claiming 💨 🚬")
+            main()
+            save_timestamp()
+            logger.success(f"New claiming cycle will start in {NEXT_RUN_WAITING}s. 💨 🚬")
+        else:
+            time_remain_to_start = NEXT_RUN_WAITING - seconds_from_last_run()
+            logger.debug(f"New claiming cycle will start in {int(time_remain_to_start)}s. 💨 🚬")
+            time.sleep(420)
