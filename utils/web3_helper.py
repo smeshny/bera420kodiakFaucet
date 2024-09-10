@@ -15,7 +15,8 @@ def connect_to_bartio_rpc(proxy) -> Web3:
 
 def check_BERA_balance(address: str, proxy: str) -> float:
     w3 = connect_to_bartio_rpc("http://"+ proxy)
-    balance_wei = w3.eth.get_balance(address)
+    checksum_address = w3.to_checksum_address(address)
+    balance_wei = w3.eth.get_balance(checksum_address)
     balance = w3.from_wei(balance_wei, 'ether')
 
     return float(balance)
