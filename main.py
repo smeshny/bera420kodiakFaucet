@@ -112,6 +112,8 @@ def open_SB_for_account(account_name, proxy, evm_wallet) -> None:
         extension_dir='capmonster_chrome_ext/pabjfbciaedomjjfelfafejkppknjleh/1.11.16_0',
         proxy=proxy,
         headless=IS_HEADLESS,
+        # headless2=True,  # Try this for linux! May help!
+
         ) as sb:
     
             claim_bera_kodiak(sb, evm_wallet)
