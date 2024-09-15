@@ -6,7 +6,8 @@
 An automated tool for claiming BERA tokens from faucet.kodiak.finance.
 
 - 💀 Tested only on macOs.
-- 💀💀💀 Tested on Windows, but may be you need go chat [Mimble Wimble LAB chat](https://t.me/MimbleWimbleLAB_chat) to ask some questions. 
+- 💀💀💀 Tested on Windows, but may be you need go chat [Mimble Wimble LAB chat](https://t.me/MimbleWimbleLAB_chat) to ask some questions.
+- 💀 Try to use this on linux ```headless2=True```
 - 💀 Be careful with the number of threads
 
 ## 🚀 Features
